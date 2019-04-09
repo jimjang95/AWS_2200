@@ -61,8 +61,6 @@ static pcb_t* head;
 
 static void push_back(pcb_t* pcb) {
     pthread_mutex_lock(&queue_lock);
-    int queue_was_empty = 0;
-    queue_was_empty = 1;
     
     switch(schedule_scheme) {
         case 0:
