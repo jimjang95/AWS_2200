@@ -251,6 +251,7 @@ extern void terminate(unsigned int cpu_id)
  */
 extern void wake_up(pcb_t *process)
 {
+    printf("[%s] Wake Up Initiated", process->name);
     /* FIX ME */
     if (schedule_scheme == 2) {
         // Priority scheduling being used.
@@ -260,6 +261,7 @@ extern void wake_up(pcb_t *process)
             process->state = PROCESS_READY;
             printf("push_back entry: wake_up, head==NULL\n");
             push_back(process); // this locks AND signals. we good.
+            printf("%s    %s    %s    %s", current[0]->name, current[1]->name, current[2]->name, current[3]->name);
         } else {
             // now we need to actually look for the worst processor to replace
             pthread_mutex_lock(&current_mutex);
