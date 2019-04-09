@@ -61,9 +61,7 @@ static pcb_t* head;
 
 static void push_back(pcb_t* pcb) {
     pthread_mutex_lock(&queue_lock);
-    printf("%s push_back started!\n", pcb->name);
     if (head == NULL) {
-        printf("      Currently head == NULL\n");
     }
     switch(schedule_scheme) {
         case 0:
@@ -74,7 +72,6 @@ static void push_back(pcb_t* pcb) {
             priority_push(pcb);
             break;
     }
-    printf("Signal being sent for %s\n", pcb->name);
     pthread_cond_signal(&empty_queue);
     pthread_mutex_unlock(&queue_lock);
 }
@@ -146,8 +143,8 @@ static void schedule(unsigned int cpu_id)
     pcb_t* tmp = pop();
     if (tmp != NULL) {
         tmp->state = PROCESS_RUNNING;
-        current[cpu_id] = tmp;
     }
+    current[cpu_id] = tmp;
     context_switch(cpu_id, tmp, prempt_time);
 }
 
@@ -177,7 +174,6 @@ extern void idle(unsigned int cpu_id)
     while (head == NULL) {
         pthread_cond_wait(&empty_queue, &current_mutex);
     }
-    printf("%u waking up!\n", cpu_id);
     schedule(cpu_id);
     pthread_mutex_unlock(&current_mutex);
     // schedule(cpu_id);
@@ -198,7 +194,6 @@ extern void preempt(unsigned int cpu_id)
 {
     /* FIX ME */
     current[cpu_id]->state = PROCESS_READY;
-    printf("Push_back entry: prempt\n");
     push_back(current[cpu_id]);
     schedule(cpu_id);
 }
@@ -251,7 +246,6 @@ extern void terminate(unsigned int cpu_id)
  */
 extern void wake_up(pcb_t *process)
 {
-    printf("[%s] Wake Up Initiated", process->name);
     /* FIX ME */
     if (schedule_scheme == 2) {
         // Priority scheduling being used.
@@ -259,9 +253,7 @@ extern void wake_up(pcb_t *process)
         if (head == NULL) {
             // The only case in which IDLE processors can exist
             process->state = PROCESS_READY;
-            printf("push_back entry: wake_up, head==NULL\n");
             push_back(process); // this locks AND signals. we good.
-            printf("%s    %s    %s    %s", current[0]->name, current[1]->name, current[2]->name, current[3]->name);
         } else {
             // now we need to actually look for the worst processor to replace
             pthread_mutex_lock(&current_mutex);
@@ -294,7 +286,6 @@ extern void wake_up(pcb_t *process)
 
     } else {
         process->state = PROCESS_READY;
-        printf("push_back entry: wake_up, else\n");
         push_back(process);
     }
 }
@@ -314,7 +305,6 @@ int main(int argc, char *argv[])
      */
     // if (argc != 2)
     // {
-    //     fprintf(stderr, "CS 2200 Project 4 -- Multithreaded OS Simulator\n"
     //         "Usage: ./os-sim <# CPUs> [ -r <time slice> | -p ]\n"
     //         "    Default : FIFO Scheduler\n"
     //         "         -r : Round-Robin Scheduler\n"
@@ -333,20 +323,16 @@ int main(int argc, char *argv[])
         switch(opt)
         {
             case 'r':
-                printf("-r case activated\n\n");
                 schedule_scheme = 1;
                 prempt_time = atoi(optarg);
                 break;
             case 's':
             case 'p':
-                printf("-p case activated\n\n");
                 schedule_scheme = 2;
                 break;
             case ':':
-                printf("option needs a value\n");
                 break;
             case '?':
-                fprintf(stderr, "CS 2200 Project 4 -- Multithreaded OS Simulator\n"
                     "Usage: ./os-sim <# CPUs> [ -r <time slice> | -p ]\n"
                     "    Default : FIFO Scheduler\n"
                     "         -r : Round-Robin Scheduler\n"
