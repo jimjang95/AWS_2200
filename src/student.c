@@ -110,11 +110,13 @@ static void priority_push(pcb_t* pcb) {
 }
 
 static pcb_t* pop() {
+    pthread_mutex_lock(&queue_lock);
     if (head == NULL) {
         return NULL;
     }
     pcb_t* tmp = head;
     head = head->next;
+    pthread_mutex_unlock(&queue_lock);
     return tmp;
 }
 
@@ -148,7 +150,9 @@ static void schedule(unsigned int cpu_id)
     if (tmp != NULL) {
         tmp->state = PROCESS_RUNNING;
     }
+    pthread_mutex_lock(&current_mutex);
     current[cpu_id] = tmp;
+    pthread_mutex_unlock(&current_mutex);
     context_switch(cpu_id, tmp, prempt_time);
 }
 
@@ -174,13 +178,13 @@ extern void idle(unsigned int cpu_id)
      * you implement a proper idle() function using a condition variable,
      * remove the call to mt_safe_usleep() below.
      */
-    // pthread_mutex_lock(&current_mutex);
+    pthread_mutex_lock(&current_mutex);
     while (head == NULL) {
         pthread_cond_wait(&empty_queue, &current_mutex);
     }
-    schedule(cpu_id);
-    pthread_mutex_unlock(&current_mutex);
     // schedule(cpu_id);
+    pthread_mutex_unlock(&current_mutex);
+    schedule(cpu_id);
     // mt_safe_usleep(1000000);
 }
 
@@ -197,7 +201,9 @@ extern void idle(unsigned int cpu_id)
 extern void preempt(unsigned int cpu_id)
 {
     /* FIX ME */
+    pthread_mutex_lock(&current_mutex);
     current[cpu_id]->state = PROCESS_READY;
+    pthread_mutex_unlock(&current_mutex);
     push_back(current[cpu_id]);
     schedule(cpu_id);
 }
@@ -212,7 +218,9 @@ extern void preempt(unsigned int cpu_id)
  */
 extern void yield(unsigned int cpu_id)
 {
+    pthread_mutex_lock(&current_mutex);
     current[cpu_id]->state = PROCESS_WAITING;
+    pthread_mutex_unlock(&current_mutex);
     schedule(cpu_id);
 }
 
@@ -225,7 +233,9 @@ extern void yield(unsigned int cpu_id)
 extern void terminate(unsigned int cpu_id)
 {
     /* FIX ME */
+    pthread_mutex_lock(&current_mutex);
     current[cpu_id]->state = PROCESS_TERMINATED;
+    pthread_mutex_unlock(&current_mutex);
     schedule(cpu_id);
 }
 
@@ -250,48 +260,32 @@ extern void terminate(unsigned int cpu_id)
  */
 extern void wake_up(pcb_t *process)
 {
+    process->state = PROCESS_READY;
+    push_back(process);
     /* FIX ME */
     if (schedule_scheme == 2) {
         // Priority scheduling being used.
 
-        if (head == NULL) {
-            // The only case in which IDLE processors can exist
-            process->state = PROCESS_READY;
-            push_back(process); // this locks AND signals. we good.
-        } else {
-            // now we need to actually look for the worst processor to replace
-            pthread_mutex_lock(&current_mutex);
-            unsigned int min_cpu = 0;
-            min_cpu -= 1;
-            unsigned int worst_priority = 0;
-            for (unsigned int i = 0; i < cpus; i++) {
-                if (current[i] != NULL && current[i]->priority > worst_priority) {
-                    worst_priority = current[i]->priority;
-                    min_cpu = i;
-                }
-            }
-            pthread_mutex_unlock(&current_mutex);
-
-            if ((min_cpu + 1) != 0 && current[min_cpu]->priority > process->priority) {
-
-                // We are going to just put given process in as the head so lock queue
-                pthread_mutex_lock(&queue_lock);
-
-                // now prepare the new process to step in
-                process->state = PROCESS_RUNNING;
-                process->next = head;
-                head = process;
-
-                // force_prempt calls prempt which calls push_back and context_change
-                pthread_mutex_unlock(&queue_lock);
-                force_preempt(min_cpu);                
+        // now we need to actually look for the worst processor to replace
+        pthread_mutex_lock(&current_mutex);
+        unsigned int min_cpu = 0;
+        min_cpu -= 1;
+        unsigned int worst_priority = 0;
+        for (unsigned int i = 0; i < cpus; i++) {
+            if (current[i] != NULL && current[i]->priority > worst_priority) {
+                worst_priority = current[i]->priority;
+                min_cpu = i;
             }
         }
+        pthread_mutex_unlock(&current_mutex);
 
-    } else {
-        process->state = PROCESS_READY;
-        push_back(process);
-    }
+        if ((min_cpu + 1) != 0 && current[min_cpu]->priority > process->priority) {
+            // force_prempt calls prempt which calls push_back and context_change
+            force_preempt(min_cpu);                
+            
+        }
+
+    }    
 }
 
 
