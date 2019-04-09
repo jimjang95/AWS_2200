@@ -62,6 +62,9 @@ static pcb_t* head;
 static void push_back(pcb_t* pcb) {
     pthread_mutex_lock(&queue_lock);
     printf("%s push_back started!\n", pcb->name);
+    if (head == NULL) {
+        printf("      Currently head == NULL\n");
+    }
     switch(schedule_scheme) {
         case 0:
         case 1:
@@ -195,6 +198,7 @@ extern void preempt(unsigned int cpu_id)
 {
     /* FIX ME */
     current[cpu_id]->state = PROCESS_READY;
+    printf("Push_back entry: prempt\n");
     push_back(current[cpu_id]);
     schedule(cpu_id);
 }
@@ -254,6 +258,7 @@ extern void wake_up(pcb_t *process)
         if (head == NULL) {
             // The only case in which IDLE processors can exist
             process->state = PROCESS_READY;
+            printf("push_back entry: wake_up, head==NULL\n");
             push_back(process); // this locks AND signals. we good.
         } else {
             // now we need to actually look for the worst processor to replace
@@ -274,6 +279,7 @@ extern void wake_up(pcb_t *process)
 
                 // Before we context_switch, clean up previous process
                 current[min_cpu]->state = PROCESS_READY;
+                printf("push_back entry: wake_up, forced_prempt\n");
                 push_back(current[min_cpu]);
 
                 // now prepare the new process to step in
@@ -288,6 +294,7 @@ extern void wake_up(pcb_t *process)
 
     } else {
         process->state = PROCESS_READY;
+        printf("push_back entry: wake_up, else\n");
         push_back(process);
     }
 }
