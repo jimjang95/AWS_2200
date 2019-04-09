@@ -61,7 +61,9 @@ static pcb_t* head;
 
 static void push_back(pcb_t* pcb) {
     pthread_mutex_lock(&queue_lock);
+    int queue_was_empty = 0;
     if (head == NULL) {
+        queue_was_empty = 1;
     }
     switch(schedule_scheme) {
         case 0:
@@ -72,7 +74,9 @@ static void push_back(pcb_t* pcb) {
             priority_push(pcb);
             break;
     }
-    pthread_cond_signal(&empty_queue);
+    if (queue_was_empty == 1) {
+        pthread_cond_signal(&empty_queue);
+    }
     pthread_mutex_unlock(&queue_lock);
 }
 
