@@ -277,11 +277,8 @@ extern void wake_up(pcb_t *process)
                 process->state = PROCESS_RUNNING;
                 current[min_cpu] = process;
                 context_switch(min_cpu, process, -1);
-            } else {
-                if (process->state != PROCESS_WAITING) {
-                    process->state = PROCESS_READY;
-                    push_back(process);
-                }
+                // process->state = PROCESS_READY;
+                // push_back(process);
             }
             pthread_mutex_unlock(&current_mutex);
         }
