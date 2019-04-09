@@ -261,13 +261,13 @@ extern void wake_up(pcb_t *process)
             min_cpu -= 1;
             unsigned int worst_priority = 0;
             for (unsigned int i = 0; i < cpus; i++) {
-                if (current[i]->priority > worst_priority) {
+                if (current[i] != NULL && current[i]->priority > worst_priority) {
                     worst_priority = current[i]->priority;
                     min_cpu = i;
                 }
             }
             pthread_mutex_unlock(&current_mutex);
-            
+
             if ((min_cpu + 1) != 0 && current[min_cpu]->priority > process->priority) {
 
                 // We are going to just put given process in as the head so lock queue
