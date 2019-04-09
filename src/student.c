@@ -71,8 +71,8 @@ static void push_back(pcb_t* pcb) {
             priority_push(pcb);
             break;
     }
-    pthread_cond_signal(&empty_queue);
     pthread_mutex_unlock(&queue_lock);
+    pthread_cond_signal(&empty_queue);
 }
 
 static void fifo(pcb_t* pcb) {
