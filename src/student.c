@@ -112,6 +112,7 @@ static pcb_t* pop() {
     }
     pcb_t* tmp = head;
     head = head->next;
+    tmp->next = NULL;
     pthread_mutex_unlock(&queue_lock);
     return tmp;
 }
