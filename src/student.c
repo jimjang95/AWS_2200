@@ -142,7 +142,9 @@ static pcb_t* pop() {
  */
 static void schedule(unsigned int cpu_id)
 {
+    printf("Before pop: %s\n", head==NULL?"NULL":head->name);
     pcb_t* tmp = pop();
+    printf("After pop: %s\n", head==NULL?"NULL":head->name);
     if (tmp != NULL) {
         tmp->state = PROCESS_RUNNING;
     }
