@@ -266,7 +266,8 @@ extern void wake_up(pcb_t *process)
                     min_cpu = i;
                 }
             }
-
+            pthread_mutex_unlock(&current_mutex);
+            
             if ((min_cpu + 1) != 0 && current[min_cpu]->priority > process->priority) {
 
                 // We are going to just put given process in as the head so lock queue
@@ -281,7 +282,6 @@ extern void wake_up(pcb_t *process)
                 pthread_mutex_unlock(&queue_lock);
                 force_preempt(min_cpu);                
             }
-            pthread_mutex_unlock(&current_mutex);
         }
 
     } else {
@@ -333,6 +333,7 @@ int main(int argc, char *argv[])
             case ':':
                 break;
             case '?':
+                fprintf(stderr, "CS 2200 Project 4 -- Multithreaded OS Simulator\n"
                     "Usage: ./os-sim <# CPUs> [ -r <time slice> | -p ]\n"
                     "    Default : FIFO Scheduler\n"
                     "         -r : Round-Robin Scheduler\n"
