@@ -61,6 +61,7 @@ static pcb_t* head;
 
 static void push_back(pcb_t* pcb) {
     pthread_mutex_lock(&queue_lock);
+    printf("%s push_back started!\n", pcb->name);
     switch(schedule_scheme) {
         case 0:
         case 1:
@@ -70,6 +71,7 @@ static void push_back(pcb_t* pcb) {
             priority_push(pcb);
             break;
     }
+    printf("Signal being sent for %s\n", pcb->name);
     pthread_cond_signal(&empty_queue);
     pthread_mutex_unlock(&queue_lock);
 }
@@ -172,6 +174,7 @@ extern void idle(unsigned int cpu_id)
     while (head == NULL) {
         pthread_cond_wait(&empty_queue, &current_mutex);
     }
+    printf("%u waking up!\n", cpu_id);
     schedule(cpu_id);
     pthread_mutex_unlock(&current_mutex);
     // schedule(cpu_id);
