@@ -61,7 +61,6 @@ static pcb_t* head;
 
 static void push_back(pcb_t* pcb) {
     pthread_mutex_lock(&queue_lock);
-    pthread_cond_signal(&empty_queue);
     switch(schedule_scheme) {
         case 0:
         case 1:
@@ -71,6 +70,7 @@ static void push_back(pcb_t* pcb) {
             priority_push(pcb);
             break;
     }
+    pthread_cond_signal(&empty_queue);
     pthread_mutex_unlock(&queue_lock);
 }
 
@@ -322,7 +322,7 @@ int main(int argc, char *argv[])
                 break;
             case 's':
             case 'p':
-                printf("-p case activated\n\n")
+                printf("-p case activated\n\n");
                 schedule_scheme = 2;
                 break;
             case ':':
