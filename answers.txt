@@ -1,0 +1,50 @@
+CS 2200 Spring 2018
+Project 4
+
+Name:
+GT Username:
+
+Problem 1B
+----------
+
+# 1 Processor
+Total execution time: 67.7 s
+Total time spent in READY state: 392.1 s
+
+# 2 Processor
+Total execution time: 36.2 s
+Total time spent in READY state: 93.2 s
+
+# 4 Processor
+Total execution time: 33.6 s
+Total time spent in READY state: 1.7 s
+
+# 8 Processor
+Total execution time: 33.4 s
+Total time spent in READY state: 2.1 s
+
+
+When it goes from 1 processor to 2 processors, the execution time halves. However, any increases to cpu count afterwards do not effect execution time, only decreasing time spent in the READY queue. From this we can conclude that the bottleneck of this problem is in the IO and not the CPU count.
+Comparing the 4 processors and 2 processor times show that when there are 4 processors, as soon as any process wakes up from IO, there exists an IDLE CPU which can instantly run the process. This is also proven when looking at the Gantt chart for 8 processors: there are very little time frames in which 5 processes are being run simultaneously, and no time frames have more than 5 processes.
+
+
+Problem 2B
+----------
+
+Total execution time: 67.9 s
+Total time spent in READY state: 336.7 s
+
+Total execution time: 67.7 s
+Total time spent in READY state: 390.7 s
+
+Total execution time: 67.6 s
+Total time spent in READY state: 389.4 s
+
+Total execution time: 67.8 s
+Total time spent in READY state: 393.4 s
+
+Problem 3B
+----------
+
+/* Fix me */
+
