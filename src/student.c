@@ -255,6 +255,7 @@ extern void wake_up(pcb_t *process)
 
         if (head == NULL) {
             // The only case in which IDLE processors can exist
+            process->state = PROCESS_READY;
             push_back(process); // this locks AND signals. we good.
         } else {
             // now we need to actually look for the worst processor to replace
@@ -272,6 +273,9 @@ extern void wake_up(pcb_t *process)
                 process->state = PROCESS_RUNNING;
                 current[min_cpu] = process;
                 context_switch(min_cpu, process, -1);
+            } else {
+                process->state = PROCESS_READY;
+                push_back(process);
             }
             pthread_mutex_unlock(&current_mutex);
         }
