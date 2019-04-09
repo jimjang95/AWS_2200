@@ -98,13 +98,8 @@ static void priority_push(pcb_t* pcb) {
         while(tmp->next != NULL && tmp->next->priority < pcb->priority) {
             tmp = tmp->next;
         }
-        if (tmp->next == NULL) {
-            tmp->next = pcb;
-            pcb->next = NULL;
-        } else {
-            pcb->next = tmp->next;
-            tmp->next = pcb->next;
-        }
+        pcb->next = tmp->next;
+        tmp->next = pcb;
     }
 }
 
@@ -261,6 +256,7 @@ extern void wake_up(pcb_t *process)
             // now we need to actually look for the worst processor to replace
             pthread_mutex_lock(&current_mutex);
             unsigned int min_cpu = 0;
+            min_cpu -= 1;
             unsigned int worst_priority = 0;
             for (unsigned int i = 0; i < cpus; i++) {
                 if (current[i]->priority > worst_priority) {
@@ -269,7 +265,7 @@ extern void wake_up(pcb_t *process)
                 }
             }
 
-            if (current[min_cpu]->priority > process->priority) {
+            if ((min_cpu + 1) != 0 && current[min_cpu]->priority > process->priority) {
                 // Found a CPU which we can actually force_prempt.
                 force_preempt(min_cpu);
 
@@ -282,8 +278,10 @@ extern void wake_up(pcb_t *process)
                 current[min_cpu] = process;
                 context_switch(min_cpu, process, -1);
             } else {
-                process->state = PROCESS_READY;
-                push_back(process);
+                if (process->state != PROCESS_WAITING) {
+                    process->state = PROCESS_READY;
+                    push_back(process);
+                }
             }
             pthread_mutex_unlock(&current_mutex);
         }
