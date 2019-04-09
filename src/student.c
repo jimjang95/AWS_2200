@@ -268,8 +268,16 @@ extern void wake_up(pcb_t *process)
                     min_cpu = i;
                 }
             }
+
             if (current[min_cpu]->priority > process->priority) {
+                // Found a CPU which we can actually force_prempt.
                 force_preempt(min_cpu);
+
+                // Before we context_switch, clean up previous process
+                current[min_cpu]->state = PROCESS_READY;
+                push_back(current[min_cpu]);
+
+                // now prepare the new process to step in
                 process->state = PROCESS_RUNNING;
                 current[min_cpu] = process;
                 context_switch(min_cpu, process, -1);
