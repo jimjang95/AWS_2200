@@ -276,20 +276,18 @@ extern void wake_up(pcb_t *process)
             }
 
             if ((min_cpu + 1) != 0 && current[min_cpu]->priority > process->priority) {
-                // Found a CPU which we can actually force_prempt.
-                force_preempt(min_cpu);
 
-                // Before we context_switch, clean up previous process
-                current[min_cpu]->state = PROCESS_READY;
-                printf("push_back entry: wake_up, forced_prempt\n");
-                push_back(current[min_cpu]);
+                // We are going to just put given process in as the head so lock queue
+                pthread_mutex_lock(&queue_lock);
 
                 // now prepare the new process to step in
                 process->state = PROCESS_RUNNING;
-                current[min_cpu] = process;
-                context_switch(min_cpu, process, -1);
-                // process->state = PROCESS_READY;
-                // push_back(process);
+                process->next = head;
+                head = process;
+
+                // force_prempt calls prempt which calls push_back and context_change
+                pthread_mutex_unlock(&queue_lock);
+                force_preempt(min_cpu);                
             }
             pthread_mutex_unlock(&current_mutex);
         }
